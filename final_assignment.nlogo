@@ -736,45 +736,51 @@ end
 
 to produce-new-worker-bee
   let parent_home belief_my_home
-  hatch-workers 1 [
-    set belief_my_home parent_home
-    set belief_food_location []
-    set shape "bee"
-    set color black
-    set age 0
-    set max_age round random-normal 50 10
-    set energy 100
-    set max_energy round random-normal 70 30
-    set desire []
-    set beliefs []
-    set intention []
-    set incoming_message_from_scout []
-    set incoming_message_from_queen []
-    set food_collected false
+  let food [total_food_in_hive] of hives-here
+  if item 0 food > 0 [
+    hatch-workers 1 [
+      set belief_my_home parent_home
+      set belief_food_location []
+      set shape "bee"
+      set color black
+      set age 0
+      set max_age round random-normal 50 10
+      set energy 100
+      set max_energy round random-normal 70 30
+      set desire []
+      set beliefs []
+      set intention []
+      set incoming_message_from_scout []
+      set incoming_message_from_queen []
+      set food_collected false
+    ]
   ]
 end
 
 to produce-new-scout-bee
   let parent_home belief_my_home
-  hatch-scouts 1 [
-    set belief_my_home parent_home
-    set shape "bug"
-    set size 1
-    set color red
-    set age 0
-    set max_age round random-normal 50 10
-    set energy 100
-    set max_energy round random-normal 70 30
-    set desire []
-    set beliefs []
-    set intention []
-    set observed_food_source []
-    set incoming_message_from_queen []
-    set outgoing_message_food []
-    set outgoing_messages_sites []
-    set belief_new_hive_location []
-    set belief_high_score 0
-    set told_queen true
+  let food [total_food_in_hive] of hives-here
+  if item 0 food > 0 [
+    hatch-scouts 1 [
+      set belief_my_home parent_home
+      set shape "bug"
+      set size 1
+      set color red
+      set age 0
+      set max_age round random-normal 50 10
+      set energy 100
+      set max_energy round random-normal 70 30
+      set desire []
+      set beliefs []
+      set intention []
+      set observed_food_source []
+      set incoming_message_from_queen []
+      set outgoing_message_food []
+      set outgoing_messages_sites []
+      set belief_new_hive_location []
+      set belief_high_score 0
+      set told_queen true
+    ]
   ]
 end
 
@@ -1878,7 +1884,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
