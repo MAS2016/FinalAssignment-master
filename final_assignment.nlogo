@@ -225,7 +225,7 @@ to setup-workers
     set shape "bee"
     set color black
     set belief_my_home [patch-here] of hive 0
-    set belief_food_location[]
+    set belief_food_location 0
     set age 0
     set max_age round random-normal 50 10
     set energy 100
@@ -340,14 +340,14 @@ to update-beliefs
     if not empty? incoming_message_from_scout [                          ; if worker receives message about food location (from scout) then set belief_food_location to new food location
       set belief_food_location item 0 incoming_message_from_scout
       set incoming_message_from_scout []
-      ]
+    ]
     if not empty? incoming_message_from_queen [                          ; if worker receives message about new home location (from new queen) then set belief_my_home to new home location
       set belief_my_home item 0 incoming_message_from_queen
       set incoming_message_from_queen []
       ]
-    if food_collected = true and carrying = 0 [
-      set belief_food_location []
-      ]
+    ;if food_collected = true and carrying = 0 [
+    ;  set belief_food_location 0
+    ;  ]
   ]
 
   ; SCOUTS:
@@ -439,8 +439,8 @@ to update-intentions
   ask workers [
     if desire = "provide colony with food"
     [
-    ifelse patch-here = belief_my_home and belief_food_location = [] [set intention "wait for message"][                                          ; if worker has no beliefs about food source then set intention to wait for message
-    ifelse belief_food_location != [] and patch-here != belief_food_location and food_collected = false [set intention "fly to food location" ][  ; if worker has a belief about food source then set intention to fly to food
+    ifelse patch-here = belief_my_home and belief_food_location = 0 [set intention "wait for message"][                                          ; if worker has no beliefs about food source then set intention to wait for message
+    ifelse is-patch? belief_food_location and patch-here != belief_food_location and food_collected = false [set intention "fly to food location" ][  ; if worker has a belief about food source then set intention to fly to food
     ifelse patch-here = belief_food_location and food_collected = false [set intention "collect food"][                                           ; if worker has arrived at food source then collect food
     ifelse patch-here != belief_my_home and food_collected = true [set intention "fly to hive"][                                                  ; if worker has collected food then fly to hive
     ifelse patch-here = belief_my_home and food_collected = true [set intention "drop food in hive"][                                             ; if worker has collcted food and is at home then drop food in hive
@@ -740,7 +740,7 @@ to produce-new-worker-bee
   if item 0 food > 0 [
     hatch-workers 1 [
       set belief_my_home parent_home
-      set belief_food_location []
+      set belief_food_location 0
       set shape "bee"
       set color black
       set age 0
@@ -1061,9 +1061,9 @@ SLIDER
 energy_loss_rate
 energy_loss_rate
 0
-100
-2
 1
+0.3
+0.05
 1
 NIL
 HORIZONTAL
@@ -1113,7 +1113,7 @@ scout_message_effectiveness
 scout_message_effectiveness
 0
 1
-0.75
+1
 0.05
 1
 NIL
