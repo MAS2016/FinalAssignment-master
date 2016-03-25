@@ -707,8 +707,11 @@ end
 ; Add the food cargo to the total food in the hive and update carrying accordingly
 to drop-food-in-hive
   let cargo carrying
+  print "dropped"
   ask hives-at [pxcor] of belief_my_home [pycor] of belief_my_home[
     set total_food_in_hive total_food_in_hive + cargo
+    print "dropped"
+    print cargo
   ]
   set carrying 0
   set food_collected false
@@ -958,7 +961,7 @@ number_of_food_sources
 number_of_food_sources
 1
 100
-30
+61
 1
 1
 NIL
@@ -1007,7 +1010,7 @@ gain_from_food
 gain_from_food
 0
 10
-1
+5
 1
 1
 NIL
@@ -1067,7 +1070,7 @@ energy_loss_rate
 energy_loss_rate
 0
 1
-0.3
+0.1
 0.05
 1
 NIL
@@ -1446,6 +1449,17 @@ MONITOR
 759
 NIL
 [belief_high_score] of min-one-of scouts [who]
+17
+1
+11
+
+MONITOR
+1304
+263
+1361
+308
+Cargo
+[carrying] of min-one-of workers [who]
 17
 1
 11
