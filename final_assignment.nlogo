@@ -542,7 +542,7 @@ end
 ; decrease food in hive
 to eat
   set energy energy + gain_from_food
-  ask hives-at [pxcor] of belief_my_home [pycor] of belief_my_home[
+  ask hives-here[
     set total_food_in_hive total_food_in_hive - 1
   ]
 end
@@ -707,10 +707,8 @@ end
 ; Add the food cargo to the total food in the hive and update carrying accordingly
 to drop-food-in-hive
   let cargo carrying
-  print "dropped"
-  ask hives-at [pxcor] of belief_my_home [pycor] of belief_my_home[
+  ask hives-here[
     set total_food_in_hive total_food_in_hive + cargo
-    print "dropped"
     print cargo
   ]
   set carrying 0
@@ -1903,7 +1901,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 5.3
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
