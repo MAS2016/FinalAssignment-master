@@ -406,6 +406,7 @@ to update-beliefs
       if not empty? incoming_messages_from_scout                 ; if queen receives message from scout
         [ set beliefs fput incoming_messages_from_scout beliefs  ; put it in beliefbase
           set beliefs remove-duplicates beliefs
+          set beliefs sort-by [item 1 ?1 > item 1 ?2] beliefs ; sort beliefs by quality
           set incoming_messages_from_scout []
           ]
     ]
@@ -451,7 +452,7 @@ to update-intentions
     ]]]]]
     ]
 
-    if energy < max_energy and patch-here = belief_my_home  ; if worker has less energy than max energy and is at hive, he intends to eat
+    if energy < 0.5 * max_energy and patch-here = belief_my_home  ; if worker has less energy than max energy and is at hive, he intends to eat
       [set intention "eat"]
 
     if not empty? incoming_message_from_queen  ; if worker has belief about location of new hive (sent by queen), then he intends to migrate
@@ -476,7 +477,7 @@ to update-intentions
       ifelse belief_moved [set intention "look around"][                                                         ; if scout has moved then set intention to "look around" - at look around "new hive site quality" is calculated based on the distance to food sources in its belief base
       ]]]]]]
 
-    if energy < max_energy and patch-here = belief_my_home [set intention "eat"]                           ; if scout has less energy than max energy and is at hive, he intends to eat
+    if energy < 0.5 * max_energy and patch-here = belief_my_home [set intention "eat"]                           ; if scout has less energy than max energy and is at hive, he intends to eat
     if not empty? incoming_message_from_queen [set intention "migrate"] ; if scout has belief about location of new hive (send by queen), then he intends to migrate
     ]
 
@@ -491,10 +492,14 @@ to update-intentions
   ask queens [
     if desire = "maintain colony"
     [
+      ifelse empty? beliefs [set intention "wait for new possible hive location"][ ;if hive is full but there is no possible new location yet, wait
+        let new_good_hive_location_found false
+        foreach beliefs [
+          if item 1 ? > 0.3 [set new_good_hive_location_found true] ; check if there is a good hive location already available
+        ]
       ifelse hive_beliefs = "too few workers" [set intention "produce new worker"][
       ifelse hive_beliefs = "too few scouts" [set intention "produce new scout"][
-      ifelse empty? beliefs [set intention "wait for new possible hive location"][ ;if hive is full but there is no possible new location yet, wait
-      ifelse hive_beliefs = "hive is full" and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
+      ifelse (hive_beliefs = "hive is full" or new_good_hive_location_found = true) and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
       set intention "tell others to migrate"  ; if there is a newly hatched queen (at location of old queen) and hive is full, then intention is to tell bees (incl. the hatched queen) to migrate
       ]]]]]
 
