@@ -552,7 +552,7 @@ to eat
         set total_food_in_hive total_food_in_hive - 1
       ]
     ]
-  ][set energy energy - energy_loss_rate] ; if there is no food, decrease energy
+  ][use-energy] ; if there is no food, decrease energy
 end
 
 to increase-age
