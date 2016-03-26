@@ -403,7 +403,7 @@ to update-beliefs
       ifelse current_sw_ratio <= scout_worker_ratio [set hive_beliefs "too few scouts"][   ; else, if ratio between scouts and workers is lower than ratio as set by user, she believes that there are too few scouts
           set hive_beliefs "too few workers"]                                              ; else, she believes that there are too few workers
       ]
-      if [total_bees_in_hive] of one-of hives-here = 0 and [total_food_in_hive] of one-of hives-here <= 0 [ ; if there is no more food and there are no more bees, hive and queen die
+      if [total_bees_in_hive] of one-of hives-here = 1 and [total_food_in_hive] of one-of hives-here <= 0 [ ; if there is no more food and there are no more bees other than the queen, hive and queen die
         die
         ask one-of hives-here [die]
       ]
