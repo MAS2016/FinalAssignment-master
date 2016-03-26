@@ -371,7 +371,7 @@ to update-beliefs
   ;      regrow food to food sources with nectar_refill_rate
   ask patches [
     if plabel != -1 [
-      ifelse plabel + nectar_refill_rate < max_food_value [set plabel plabel + nectar_refill_rate][set plabel max_food_value]
+      ifelse food_value + nectar_refill_rate < max_food_value [set food_value food_value + nectar_refill_rate set plabel precision food_value 1][set plabel max_food_value]
     ]
   ]
 
@@ -501,12 +501,12 @@ to update-intentions
       ifelse empty? beliefs [set intention "wait for new possible hive location"][ ;if hive is full but there is no possible new location yet, wait
         let new_good_hive_location_found false
         foreach beliefs [
-          if item 1 ? > 0.3 [ ; check if there is a good hive location already available
+          if item 1 ? > 0.8 [ ; check if there is a good hive location already available
 
             set new_good_hive_location_found true
           ]
         ]
-      ifelse (hive_beliefs = "hive is full" and new_good_hive_location_found = true) and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
+      ifelse (hive_beliefs = "hive is full" or new_good_hive_location_found = true) and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
       set intention "tell others to migrate"  ; if there is a newly hatched queen (at location of old queen) and hive is full, then intention is to tell bees (incl. the hatched queen) to migrate
       ]]]]]
 
@@ -554,7 +554,7 @@ to eat
       set energy energy + gain_from_food
       ask hives-here[
         set total_food_in_hive total_food_in_hive - 1
-        set label total_food_in_hive
+        set label round total_food_in_hive
       ]
     ]
   ][use-energy] ; if there is no food, decrease energy
@@ -715,7 +715,7 @@ to collect-food
       set carrying food_value
       ask patch-here [set food_value 0]
     ]
-    ask patch-here [set plabel food_value]
+    ask patch-here [set plabel precision food_value 1]
     set food_collected true
 end
 
@@ -725,7 +725,7 @@ to drop-food-in-hive
   if not any? hives-here [die] ; if there is no hive at the current location, die
   ask hives-here[
     set total_food_in_hive total_food_in_hive + cargo
-    set label total_food_in_hive
+    set label round total_food_in_hive
   ]
   set carrying 0
   set food_collected false
@@ -1024,7 +1024,7 @@ gain_from_food
 gain_from_food
 0
 10
-5
+3
 1
 1
 NIL
@@ -1054,7 +1054,7 @@ carrying_capacity
 carrying_capacity
 0
 20
-5
+4
 1
 1
 NIL
@@ -1068,9 +1068,9 @@ SLIDER
 nectar_refill_rate
 nectar_refill_rate
 0
-100
 10
-1
+0.35
+0.05
 1
 NIL
 HORIZONTAL
@@ -1083,9 +1083,9 @@ SLIDER
 energy_loss_rate
 energy_loss_rate
 0
-1
-0.2
-0.05
+10
+0.5
+0.5
 1
 NIL
 HORIZONTAL
