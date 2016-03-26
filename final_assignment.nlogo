@@ -554,6 +554,7 @@ to eat
       set energy energy + gain_from_food
       ask hives-here[
         set total_food_in_hive total_food_in_hive - 1
+        set label total_food_in_hive
       ]
     ]
   ][use-energy] ; if there is no food, decrease energy
@@ -724,6 +725,7 @@ to drop-food-in-hive
   if not any? hives-here [die] ; if there is no hive at the current location, die
   ask hives-here[
     set total_food_in_hive total_food_in_hive + cargo
+    set label total_food_in_hive
   ]
   set carrying 0
   set food_collected false
