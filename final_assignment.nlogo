@@ -492,14 +492,17 @@ to update-intentions
   ask queens [
     if desire = "maintain colony"
     [
+      ifelse hive_beliefs = "too few workers" [set intention "produce new worker"][
+      ifelse hive_beliefs = "too few scouts" [set intention "produce new scout"][
       ifelse empty? beliefs [set intention "wait for new possible hive location"][ ;if hive is full but there is no possible new location yet, wait
         let new_good_hive_location_found false
         foreach beliefs [
-          if item 1 ? > 0.3 [set new_good_hive_location_found true] ; check if there is a good hive location already available
+          if item 1 ? > 0.3 [ ; check if there is a good hive location already available
+
+            set new_good_hive_location_found true
+          ]
         ]
-      ifelse hive_beliefs = "too few workers" [set intention "produce new worker"][
-      ifelse hive_beliefs = "too few scouts" [set intention "produce new scout"][
-      ifelse (hive_beliefs = "hive is full" or new_good_hive_location_found = true) and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
+      ifelse (hive_beliefs = "hive is full" and new_good_hive_location_found = true) and count other queens-here = 0 [set intention "produce new queen"][ ; if queen believes her hive is full and there is not yet a newly hatched queen, then her intention is to produce a new queen
       set intention "tell others to migrate"  ; if there is a newly hatched queen (at location of old queen) and hive is full, then intention is to tell bees (incl. the hatched queen) to migrate
       ]]]]]
 
@@ -560,6 +563,7 @@ end
 
 to move
   fd 1
+  use-energy
 end
 
 ; ######################
@@ -650,6 +654,7 @@ end
 
 
 to tell-workers
+  if not any? hives-here [die] ; if there is no hive at the belief my home, the bee dies
   set outgoing_message_food observed_food_source
   set observed_food_source []
 end
@@ -707,9 +712,9 @@ end
 ; Add the food cargo to the total food in the hive and update carrying accordingly
 to drop-food-in-hive
   let cargo carrying
+  if not any? hives-here [die] ; if there is no hive at the current location, die
   ask hives-here[
     set total_food_in_hive total_food_in_hive + cargo
-    print cargo
   ]
   set carrying 0
   set food_collected false
@@ -1068,7 +1073,7 @@ energy_loss_rate
 energy_loss_rate
 0
 1
-0.1
+0.2
 0.05
 1
 NIL
@@ -1119,7 +1124,7 @@ scout_message_effectiveness
 scout_message_effectiveness
 0
 1
-1
+0.3
 0.05
 1
 NIL
@@ -1134,7 +1139,7 @@ queen_message_effectiveness
 queen_message_effectiveness
 0
 1
-0.75
+0.35
 0.05
 1
 NIL
