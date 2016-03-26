@@ -545,7 +545,7 @@ end
 ; decrease food in hive
 to eat
   let food_available [total_food_in_hive] of hives-here
-  if item 0 food_available > 0 [ ; if there is no food, the bee cannot eat
+  if item 0 food_available > 0  and any? hives-here[ ; if there is no food, the bee cannot eat
     set energy energy + gain_from_food
     ask hives-here[
       set total_food_in_hive total_food_in_hive - 1
