@@ -403,9 +403,9 @@ to update-beliefs
       ifelse current_sw_ratio <= scout_worker_ratio [set hive_beliefs "too few scouts"][   ; else, if ratio between scouts and workers is lower than ratio as set by user, she believes that there are too few scouts
           set hive_beliefs "too few workers"]                                              ; else, she believes that there are too few workers
       ]
-      if [total_bees_in_hive] of one-of hives-here = 1 and [total_food_in_hive] of one-of hives-here <= 0 [ ; if there is no more food and there are no more bees other than the queen, hive and queen die
-        die
+      if [total_bees_in_hive] of one-of hives-here <= 1 and [total_food_in_hive] of one-of hives-here <= 0 [ ; if there is no more food and there are no more bees other than the queen, hive and queen die
         ask one-of hives-here [die]
+        die
       ]
       if not empty? incoming_messages_from_scout                 ; if queen receives message from scout
         [ set beliefs fput incoming_messages_from_scout beliefs  ; put it in beliefbase
@@ -456,7 +456,7 @@ to update-intentions
     ]]]]]
     ]
 
-    if energy < 0.5 * max_energy and patch-here = belief_my_home  ; if worker has less energy than max energy and is at hive, he intends to eat
+    if energy < 0.2 * max_energy and patch-here = belief_my_home  ; if worker has less energy than max energy and is at hive, he intends to eat
       [set intention "eat"]
 
     if not empty? incoming_message_from_queen  ; if worker has belief about location of new hive (sent by queen), then he intends to migrate
@@ -481,7 +481,7 @@ to update-intentions
       ifelse belief_moved [set intention "look around"][                                                         ; if scout has moved then set intention to "look around" - at look around "new hive site quality" is calculated based on the distance to food sources in its belief base
       ]]]]]]
 
-    if energy < 0.5 * max_energy and patch-here = belief_my_home [set intention "eat"]                           ; if scout has less energy than max energy and is at hive, he intends to eat
+    if energy < 0.2 * max_energy and patch-here = belief_my_home [set intention "eat"]                           ; if scout has less energy than max energy and is at hive, he intends to eat
     if not empty? incoming_message_from_queen [set intention "migrate"] ; if scout has belief about location of new hive (send by queen), then he intends to migrate
     ]
 
@@ -836,7 +836,7 @@ to create-new-hive
       set shape "hive"
       set color yellow
       set size 3
-      set total_food_in_hive 0
+      set total_food_in_hive 5
       set label total_food_in_hive set label-color red
     ]
   ]
