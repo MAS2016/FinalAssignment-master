@@ -21,7 +21,6 @@ globals
 ;   4) Sites (possible hive locations)
 ;   5) Hives
 ;   6) Sensors (sensors that allow an agent to observe the environment)
-;   (optional: enemy)
 
 breed [scouts scout]
 breed [workers worker]
@@ -32,7 +31,7 @@ breed [sensors sensor]
 ; --- Local variables ---
 ; The following local variables exist:
 ; FOR BEES:
-;   1) beliefs                : the agent's current belief base
+;   1) beliefs                : the agent's current beliefs (seperated into belief about home, food, new sites, age, etc.)
 ;   2) desires                : the agent's current desire
 ;   3) intentions             : the agent's current intention
 ;   4) carrying               : the amount of food a worker bee is carrying
@@ -40,8 +39,8 @@ breed [sensors sensor]
 ;   6) max_age                : maximum age of a bee (i.e. at which it dies) (normal distribution)
 ;   7) energy                 : the current amount of energy that a bee has
 ;   8) max_energy             : maximum energy of a bee (normal distribution)
-;   9) outgoing_messages      : the current outgoing message (coming from a scout or queen)
-;  10) incoming_messages      : the current incoming message
+;   9) outgoing_messages      : outgoing messages (coming from a scout or queen) (different types, see below)
+;  10) incoming_messages      : incoming messages (different types, see below)
 
 ; FOR FOOD SOURCE (patches):
 ;  11) food_value             : the amount of food that is stored in a source
@@ -345,9 +344,6 @@ to update-beliefs
       set belief_my_home item 0 incoming_message_from_queen
       set incoming_message_from_queen []
       ]
-    ;if food_collected = true and carrying = 0 [
-    ;  set belief_food_location 0
-    ;  ]
   ]
 
   ; SCOUTS:
@@ -362,13 +358,10 @@ to update-beliefs
       [set belief_my_home item 0 incoming_message_from_queen ; add it to his belief base
        set incoming_message_from_queen []
       ]
-;    if [food_value] of patch-here > 0 [set beliefs patch-here]  ; scout must remember belief of current location food source to communicate back at hive to some workers
-;    set beliefs lput food_source beliefs
   ]
 
 
   ; FOOD SOURCES:
-  ;      regrow food to food sources with nectar_refill_rate
   ask patches [
     if plabel != -1 [
       ifelse food_value + nectar_refill_rate < max_food_value [set food_value food_value + nectar_refill_rate set plabel precision food_value 1][set plabel max_food_value]
@@ -392,13 +385,13 @@ to update-beliefs
   ask queens [
     if desire = "maintain colony" [
       let queen_home belief_my_home
-      let bees_in_hive [total_bees_in_hive] of one-of hives-here  ; 'one-of' added so that it reports not an agentset (list), but only 1 agent
+      let bees_in_hive [total_bees_in_hive] of one-of hives-here                           ; 'one-of' added so that it reports not an agentset (list), but only 1 agent
       let bee_capacity_of_hive [bee_capacity] of one-of hives-here
       let num_scouts count scouts with [belief_my_home = queen_home]
       let num_workers count workers with [belief_my_home = queen_home]
       if num_scouts = 0 [set num_scouts 1]
       if num_workers = 0 [set num_workers 1]
-      let current_sw_ratio (num_scouts / num_workers) ; calculate the current scout to worker ratio
+      let current_sw_ratio (num_scouts / num_workers)                                      ; calculate the current scout to worker ratio
       ifelse bees_in_hive >= bee_capacity_of_hive [set hive_beliefs "hive is full"][       ; if number of bees in hive reaches hive threshold, queen believes that hive is full
       ifelse current_sw_ratio <= scout_worker_ratio [set hive_beliefs "too few scouts"][   ; else, if ratio between scouts and workers is lower than ratio as set by user, she believes that there are too few scouts
           set hive_beliefs "too few workers"]                                              ; else, she believes that there are too few workers
@@ -414,7 +407,7 @@ to update-beliefs
           set incoming_messages_from_scout []
           ]
     ]
-    if desire = "create new colony" and not empty? incoming_message_from_queen   ; if desire is to create a new colony (the newly hatched queen has this desire) and has incoming message from (old) queen
+    if desire = "create new colony" and not empty? incoming_message_from_queen         ; if desire is to create a new colony (the newly hatched queen has this desire) and has incoming message from (old) queen
       [
         set belief_my_home item 0 incoming_message_from_queen                          ; location of new hive (as communicated by old queen) is added to belief base
         set incoming_message_from_queen []
@@ -427,8 +420,6 @@ end
 ; --- ---------------------Update intentions -----------------------------------------------------
 ;-------------------------------------------------------------------------------------------------
 ;-------------------------------------------------------------------------------------------------
-; SHOULD BE DEPENDENT UPON BELIEFS & DESIRES
-; 'Observe' should be split into 2 intentions: 'walk around' and 'look around'
 
 to update-intentions
   ; WORKERS:
@@ -444,22 +435,18 @@ to update-intentions
   ask workers [
     if desire = "provide colony with food"
     [
-    ifelse patch-here = belief_my_home and belief_food_location = 0 [set intention "wait for message"][                                          ; if worker has no beliefs about food source then set intention to wait for message
+    ifelse patch-here = belief_my_home and belief_food_location = 0 [set intention "wait for message"][                                               ; if worker has no beliefs about food source then set intention to wait for message
     ifelse is-patch? belief_food_location and patch-here != belief_food_location and food_collected = false [set intention "fly to food location" ][  ; if worker has a belief about food source then set intention to fly to food
-    ifelse patch-here = belief_food_location and food_collected = false [set intention "collect food"][                                           ; if worker has arrived at food source then collect food
-    ifelse patch-here != belief_my_home and food_collected = true [set intention "fly to hive"][                                                  ; if worker has collected food then fly to hive
-    ifelse patch-here = belief_my_home and food_collected = true [set intention "drop food in hive"][                                             ; if worker has collcted food and is at home then drop food in hive
-
-;    ifelse carrying = 0 and (distance item 0 beliefs * 2 * energy_loss_rate) < energy [set intention "fly to food location"][                    ; if above is not true, and worker carries food, and beliefs that it has enough energy to collect the food, he intends to fly to location of food
-;    ifelse carrying = 0 and (belief_food_location * 2 * energy_loss_rate) < energy [set intention "fly to food location"][                       ; if above is not true, and worker carries food, and beliefs that it has enough energy to collect the food, he intends to fly to location of food
-
+    ifelse patch-here = belief_food_location and food_collected = false [set intention "collect food"][                                               ; if worker has arrived at food source then collect food
+    ifelse patch-here != belief_my_home and food_collected = true [set intention "fly to hive"][                                                      ; if worker has collected food then fly to hive
+    ifelse patch-here = belief_my_home and food_collected = true [set intention "drop food in hive"][                                                 ; if worker has collcted food and is at home then drop food in hive
     ]]]]]
     ]
 
     if energy < 0.2 * max_energy and patch-here = belief_my_home  ; if worker has less energy than max energy and is at hive, he intends to eat
       [set intention "eat"]
 
-    if not empty? incoming_message_from_queen  ; if worker has belief about location of new hive (sent by queen), then he intends to migrate
+    if not empty? incoming_message_from_queen                     ; if worker has belief about location of new hive (sent by queen), then he intends to migrate
       [set intention "migrate"]
   ]
 
@@ -510,10 +497,10 @@ to update-intentions
       set intention "tell others to migrate"  ; if there is a newly hatched queen (at location of old queen) and hive is full, then intention is to tell bees (incl. the hatched queen) to migrate
       ]]]]]
 
-    if desire = "create new colony"                                                    ; this is the desire of the newly hatched queen
+    if desire = "create new colony"  ; this is the desire of the newly hatched queen
     [
-      ifelse patch-here = belief_my_home [set intention "create new hive"][                   ; if current location = belief location of new (optimal) site then create new hive
-      ifelse is-patch? belief_my_home [set intention "migrate"][                             ; if new queen (desire = create new colony) and it has a belief of a suitable new hive location then migrate (and also tell a part of the current colony to migrate)
+      ifelse patch-here = belief_my_home [set intention "create new hive"][   ; if current location = belief location of new (optimal) site then create new hive
+      ifelse is-patch? belief_my_home [set intention "migrate"][              ; if new queen (desire = create new colony) and it has a belief of a suitable new hive location then migrate (and also tell a part of the current colony to migrate)
       ]]]
   ]
 
@@ -521,8 +508,6 @@ end
 
 
 ; --- Execute actions ---
-; ACTIONS SHOULD IMMEDIATELY FOLLOW AN INTENTION
-; 1 actie per tick
 
 to execute-actions
   execute-scout-actions
@@ -545,8 +530,7 @@ to migrate
 end
 
 ; 2) eat
-; increase own energy by 1
-; decrease food in hive
+
 to eat
   ifelse any? hives-here [
     let food_available [total_food_in_hive] of hives-here
@@ -641,7 +625,7 @@ to update-food-sources
     let p patch-here
     let food_val [food_value] of p
     let food_source (list p)
-    if food_val > 0 [                                                        ; if there is food in observed patch then set observed_food_source and add it to belief-base of scout
+    if food_val > 0 [   ; if there is food in observed patch then set observed_food_source and add it to belief-base of scout
       ask bee[
         set observed_food_source food_source
         set beliefs lput food_source beliefs
@@ -695,8 +679,6 @@ to execute-worker-actions
     ifelse intention = "drop food in hive" [drop-food-in-hive][
     ifelse intention = "fly to food location" [fly-to-food-location][
     ifelse intention = "fly to hive" [fly-to-hive][
-
-;    ifelse intention = "move to food location" [set heading first beliefs move][
     ifelse intention = "" [][
     ]]]]]]
   increase-age
@@ -704,7 +686,7 @@ to execute-worker-actions
 end
 
 to wait-for-message
-  ;fly around in a circle
+  right 10 ; roam around in hive
 end
 
 to collect-food
@@ -764,6 +746,7 @@ to produce-new-worker-bee
       set belief_my_home parent_home
       set belief_food_location 0
       set shape "bee"
+      set size 1
       set color black
       set age 0
       set max_age round random-normal 50 10
@@ -975,7 +958,7 @@ number_of_food_sources
 number_of_food_sources
 1
 100
-61
+21
 1
 1
 NIL
@@ -1120,7 +1103,7 @@ initial_bees
 initial_bees
 0
 20
-20
+10
 1
 1
 NIL
@@ -1135,7 +1118,7 @@ scout_message_effectiveness
 scout_message_effectiveness
 0
 1
-0.3
+0.25
 0.05
 1
 NIL
@@ -1165,7 +1148,7 @@ scout_radius
 scout_radius
 0
 5
-3
+2
 0.5
 1
 NIL
@@ -1450,18 +1433,18 @@ MONITOR
 662
 1415
 707
-NIL
+belief new nest-site location
 [belief_new_hive_location] of min-one-of scouts [who]
 17
 1
 11
 
 MONITOR
-1063
-714
-1370
-759
-NIL
+1064
+709
+1371
+754
+belief high score
 [belief_high_score] of min-one-of scouts [who]
 17
 1
